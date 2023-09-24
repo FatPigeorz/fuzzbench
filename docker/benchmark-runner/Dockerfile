@@ -81,6 +81,14 @@ COPY common $ROOT_DIR/common
 COPY experiment/runner.py $ROOT_DIR/experiment/runner.py
 COPY docker/benchmark-runner $ROOT_DIR/docker/benchmark-runner
 
+# support for llamuta
+# Copy the mutators directory.
+COPY mutators $WORKDIR/mutators
+ENV MUTATOR_DIR=$WORKDIR/mutators
+ENV MUTATOR_LIB=$MUTATOR_DIR/llamuta.so
+ENV PLACEHOLDER_MUTATOR=$MUTATOR_DIR/placeholder.so
+RUN cp $PLACEHOLDER_MUTATOR $MUTATOR_LIB
+
 ENV PYTHONPATH=$ROOT_DIR
 RUN chmod +x $ROOT_DIR/docker/benchmark-runner/startup-runner.sh
 ENTRYPOINT $ROOT_DIR/docker/benchmark-runner/startup-runner.sh
