@@ -13,3 +13,6 @@
 # limitations under the License.
 
 FROM gcr.io/fuzzbench/base-image
+
+# support for llamuta 
+COPY mutators /mutators

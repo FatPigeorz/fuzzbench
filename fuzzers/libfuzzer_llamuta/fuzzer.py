@@ -24,15 +24,14 @@ def build():
     # With LibFuzzer we use -fsanitize=fuzzer-no-link for build CFLAGS and then
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
-    cflags = ['-fsanitize=fuzzer-no-link']
+    # support for llamuta, link the mutator to the fuzzing binary
+    cflags = ['-fsanitize=fuzzer-no-link', '-rdynamic', '-ldl']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
-    os.environ['CC'] = 'clang'
+    os.environ['CC'] = 'clang' 
     os.environ['CXX'] = 'clang++'
-    # support for llamuta, link the mutator to the fuzzing binary
-    os.environ['FUZZER_LIB'] = f"/usr/lib/libFuzzer.a {os.environ['MUTATOR_LIB']}"
-
+    os.environ['FUZZER_LIB'] = '/usr/lib/libFuzzer.a'
 
     utils.build_benchmark()
 
@@ -48,14 +47,19 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     if extra_flags is None:
         extra_flags = []
 
-    # if correspond mutator in $MUTATOR_DIR
-    if os.path.basename(target_binary) in os.listdir(os.environ['MUTATOR_DIR']):
-        # copy the mutator to the $MUTATOR_LIB
-        mutator_path = os.path.join(os.environ['MUTATOR_DIR'], os.path.basename(target_binary))
-        subprocess.check_call(['cp', mutator_path, os.environ['MUTATOR_LIB']])
+    # experiment/runner run this function in seperate process without preset environ
+    # so hardcode the paths here
+    mutator_dir = '/mutators'
+    ph_mutator = '/mutators/placeholder.so'
+
+    target_mutator = os.path.basename(target_binary) + '.so'
+    if target_mutator in os.listdir(mutator_dir):
+        # set LLAMUTA_MUTATOR as target_mutator
+        target_mutator_path = os.path.join(mutator_dir, target_mutator)
+        os.environ['LLAMUTA_MUTATOR'] = target_mutator_path
     else:
-        # copy the placeholder mutator($PLACEHOLDER_MUTATOR) to the $MUTATOR_LIB
-        subprocess.check_call(['cp', os.environ['PLACEHOLDER_MUTATOR'], os.environ['MUTATOR_LIB']])
+        # use placeholder for test
+        os.environ['LLAMUTA_MUTATOR'] = ph_mutator
 
     # Seperate out corpus and crash directories as sub-directories of
     # |output_corpus| to avoid conflicts when corpus directory is reloaded.
@@ -82,7 +86,8 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     flags = [
         '-print_final_stats=1',
         # `close_fd_mask` to prevent too much logging output from the target.
-        '-close_fd_mask=3',
+        # close for test
+        # '-close_fd_mask=3',
         # Run in fork mode to allow ignoring ooms, timeouts, crashes and
         # continue fuzzing indefinitely.
         '-fork=1',
