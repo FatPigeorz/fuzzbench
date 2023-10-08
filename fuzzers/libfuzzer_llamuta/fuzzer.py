@@ -25,7 +25,7 @@ def build():
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
     # support for llamuta, link the mutator to the fuzzing binary
-    cflags = ['-fsanitize=fuzzer-no-link', '-rdynamic', '-ldl']
+    cflags = ['-fsanitize=fuzzer-no-link']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -46,20 +46,6 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     """Run fuzzer."""
     if extra_flags is None:
         extra_flags = []
-
-    # experiment/runner run this function in seperate process without preset environ
-    # so hardcode the paths here
-    mutator_dir = '/mutators'
-    ph_mutator = '/mutators/placeholder.so'
-
-    target_mutator = os.path.basename(target_binary) + '.so'
-    if target_mutator in os.listdir(mutator_dir):
-        # set LLAMUTA_MUTATOR as target_mutator
-        target_mutator_path = os.path.join(mutator_dir, target_mutator)
-        os.environ['LLAMUTA_MUTATOR'] = target_mutator_path
-    else:
-        # use placeholder for test
-        os.environ['LLAMUTA_MUTATOR'] = ph_mutator
 
     # Seperate out corpus and crash directories as sub-directories of
     # |output_corpus| to avoid conflicts when corpus directory is reloaded.
@@ -113,6 +99,19 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     if dictionary_path:
         flags.append('-dict=' + dictionary_path)
 
+
+    # experiment/runner run this function in seperate process without preset environ
+    # so hardcode the paths here
+    mutator_dir = '/mutators'
+
     command = [target_binary] + flags + [output_corpus, input_corpus]
+
+    target_mutator = os.path.basename(target_binary) + '.so'
+    if target_mutator in os.listdir(mutator_dir):
+        # set LLAMUTA_MUTATOR as target_mutator
+        target_mutator_path = os.path.join(mutator_dir, target_mutator)
+        command = [f'LD_PRELOAD={target_mutator_path}']
+        print(f'[run_fuzzer] Using mutator: {target_mutator_path}')
+
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
