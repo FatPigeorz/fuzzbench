@@ -23,3 +23,5 @@ RUN git clone https://github.com/llvm/llvm-project.git /llvm-project && \
     done && wait) && \
     ar r libFuzzer.a *.o && \
     cp libFuzzer.a /usr/lib
+
+COPY mutators /mutators

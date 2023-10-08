@@ -103,19 +103,20 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     # experiment/runner run this function in seperate process without preset environ
     # so hardcode the paths here
     mutator_dir = '/mutators'
-
-
+    placeholder_path = f'{mutator_dir}/placeholder.so'
     target_mutator = os.path.basename(target_binary) + '.so'
+    print(f'[run_fuzzer] available mutators in {mutator_dir}: {os.listdir(mutator_dir)}')
     if target_mutator in os.listdir(mutator_dir):
         # set LLAMUTA_MUTATOR as target_mutator
         target_mutator_path = os.path.join(mutator_dir, target_mutator)
-        preload = f'LD_PRELOAD={target_mutator_path}'
+        env = {'LD_PRELOAD' : target_mutator_path}
         print(f'[run_fuzzer] Using mutator: {target_mutator_path}')
     else:
-        preload = 'LD_PRELOAD=/mutators/placeholder.so'
-        print('[run_fuzzer] Using mutator:/mutators/placeholder.so')
-    command = [preload, target_binary] + flags + [output_corpus, input_corpus]
+        env = {'LD_PRELOAD' : placeholder_path}
+        print(f'[run_fuzzer] Using mutator: {placeholder_path}')
+
+    command = [target_binary] + flags + [output_corpus, input_corpus]
 
 
     print('[run_fuzzer] Running command: ' + ' '.join(command))
-    subprocess.check_call(command)
+    subprocess.check_call(command, env=env)

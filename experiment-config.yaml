@@ -1,9 +1,9 @@
 # The number of trials of a fuzzer-benchmark pair.
-trials: 5
+trials: 1
 #
 # # The amount of time in seconds that each trial is run for.
 # # 1 day = 24 * 60 * 60 = 86400
-max_total_time: 43200
+max_total_time: 30
 #
 # # The location of the docker registry.
 # # FIXME: Support custom docker registry.
@@ -20,4 +20,3 @@ report_filestore: /home/junhao/fuzzbench/report-data
 #
 # # Flag that indicates this is a local experiment.
 local_experiment: true
-#

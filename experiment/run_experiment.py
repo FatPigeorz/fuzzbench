@@ -304,15 +304,15 @@ def start_experiment(  # pylint: disable=too-many-arguments
         no_seeds: bool = False,
         no_dictionaries: bool = False,
         oss_fuzz_corpus: bool = False,
-        allow_uncommitted_changes: bool = True,
+        allow_uncommitted_changes: bool = False,
         concurrent_builds: Optional[int] = DEFAULT_CONCURRENT_BUILDS,
         measurers_cpus: Optional[int] = None,
         runners_cpus: Optional[int] = None,
         region_coverage: bool = False,
         custom_seed_corpus_dir: Optional[str] = None):
     """Start a fuzzer benchmarking experiment."""
-    # if not allow_uncommitted_changes:
-        # check_no_uncommitted_changes()
+    if not allow_uncommitted_changes:
+        check_no_uncommitted_changes()
 
     validate_experiment_name(experiment_name)
     validate_benchmarks(benchmarks)
@@ -688,7 +688,7 @@ def run_experiment_main(args=None):
                         '--allow-uncommitted-changes',
                         help='Skip check that no uncommited changes made.',
                         required=False,
-                        default=False,
+                        default=True,
                         action='store_true')
     parser.add_argument('-cr',
                         '--region-coverage',
