@@ -104,14 +104,18 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     # so hardcode the paths here
     mutator_dir = '/mutators'
 
-    command = [target_binary] + flags + [output_corpus, input_corpus]
 
     target_mutator = os.path.basename(target_binary) + '.so'
     if target_mutator in os.listdir(mutator_dir):
         # set LLAMUTA_MUTATOR as target_mutator
         target_mutator_path = os.path.join(mutator_dir, target_mutator)
-        command = [f'LD_PRELOAD={target_mutator_path}']
+        preload = f'LD_PRELOAD={target_mutator_path}'
         print(f'[run_fuzzer] Using mutator: {target_mutator_path}')
+    else:
+        preload = 'LD_PRELOAD=/mutators/placeholder.so'
+        print('[run_fuzzer] Using mutator:/mutators/placeholder.so')
+    command = [preload, target_binary] + flags + [output_corpus, input_corpus]
+
 
     print('[run_fuzzer] Running command: ' + ' '.join(command))
     subprocess.check_call(command)
