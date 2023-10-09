@@ -25,7 +25,7 @@ def build():
     # /usr/lib/libFuzzer.a as the FUZZER_LIB for the main fuzzing binary. This
     # allows us to link against a version of LibFuzzer that we specify.
     # support for llamuta, link the mutator to the fuzzing binary
-    cflags = ['-fsanitize=fuzzer-no-link']
+    cflags = ['-fsanitize=fuzzer-no-link', '-rdynamic']
     utils.append_flags('CFLAGS', cflags)
     utils.append_flags('CXXFLAGS', cflags)
 
@@ -109,10 +109,12 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
     if target_mutator in os.listdir(mutator_dir):
         # set LLAMUTA_MUTATOR as target_mutator
         target_mutator_path = os.path.join(mutator_dir, target_mutator)
-        env = {'LD_PRELOAD' : target_mutator_path}
+        env = os.environ.copy()
+        env['LD_PRELOAD'] = target_mutator_path
         print(f'[run_fuzzer] Using mutator: {target_mutator_path}')
     else:
-        env = {'LD_PRELOAD' : placeholder_path}
+        env = os.environ.copy()
+        env['LD_PRELOAD'] = placeholder_path
         print(f'[run_fuzzer] Using mutator: {placeholder_path}')
 
     command = [target_binary] + flags + [output_corpus, input_corpus]
