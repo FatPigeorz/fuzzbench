@@ -1,0 +1,10 @@
+.xml\\
+<!DOCTYPE
+<!ELEMENT
+<doc>
+</doc>
+(a)+
+(a)*
+<a/>
+<f:a:b
+http://example.com/foo

@@ -1,0 +1,28 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
+
+PROJECT(llamuta_libfuzzer)
+
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_EXTENSIONS OFF)
+
+# Define the coverage behavior.
+ADD_LIBRARY(llamuta_libfuzzer SHARED ${CMAKE_CURRENT_SOURCE_DIR}/libfuzzer.cc)
+
+TARGET_INCLUDE_DIRECTORIES(llamuta_libfuzzer
+                           PUBLIC
+                           "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+                           "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+INSTALL(TARGETS  llamuta_libfuzzer
+    EXPORT libfuzzerLlamutaTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+INSTALL(EXPORT libfuzzerLlamutaTargets
+        FILE libfuzzerLlamutaTargets.cmake
+        NAMESPACE llamuta::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libfuzzerLlamutaTargets
+)

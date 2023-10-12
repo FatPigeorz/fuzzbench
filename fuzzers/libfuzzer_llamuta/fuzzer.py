@@ -79,7 +79,7 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         '-fork=1',
         '-ignore_ooms=1',
         '-ignore_timeouts=1',
-        '-ignore_crashes=1',
+        # '-ignore_crashes=1',
         '-entropic=1',
         '-keep_seed=1',
         '-cross_over_uniform_dist=1',
@@ -100,22 +100,21 @@ def run_fuzzer(input_corpus, output_corpus, target_binary, extra_flags=None):
         flags.append('-dict=' + dictionary_path)
 
 
-    # experiment/runner run this function in seperate process without preset environ
-    # so hardcode the paths here
-    mutator_dir = '/mutators'
-    placeholder_path = f'{mutator_dir}/placeholder.so'
-    target_mutator = os.path.basename(target_binary) + '.so'
-    print(f'[run_fuzzer] available mutators in {mutator_dir}: {os.listdir(mutator_dir)}')
-    if target_mutator in os.listdir(mutator_dir):
-        # set LLAMUTA_MUTATOR as target_mutator
-        target_mutator_path = os.path.join(mutator_dir, target_mutator)
-        env = os.environ.copy()
-        env['LD_PRELOAD'] = target_mutator_path
-        print(f'[run_fuzzer] Using mutator: {target_mutator_path}')
+    # set the llamuta mutator
+    llamuta_root = "/llamuta"
+    llamuta_mutator = "/llamuta/build/libllamuta_libfuzzer.so"
+    env = os.environ.copy()
+    env['LD_PRELOAD'] = llamuta_mutator
+    # pass dictionary path to fuzz target
+    llamuta_dicts = os.path.join(llamuta_root, 'dict')
+    target_dict = os.path.basename(target_binary) + '.dict'
+    if target_dict in os.listdir(llamuta_dicts):
+        target_dict_path = os.path.join(llamuta_dicts, target_dict)
+        env['LLAMUTA_DICT'] = target_dict_path
+        print(f'[run_fuzzer] Using LLM generated dict: {target_dict_path}')
     else:
-        env = os.environ.copy()
-        env['LD_PRELOAD'] = placeholder_path
-        print(f'[run_fuzzer] Using mutator: {placeholder_path}')
+        print(f'[run_fuzzer] Dict not found: {target_dict_path}')
+    
 
     command = [target_binary] + flags + [output_corpus, input_corpus]
 

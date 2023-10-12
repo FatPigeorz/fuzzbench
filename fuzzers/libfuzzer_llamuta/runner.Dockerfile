@@ -15,4 +15,14 @@
 FROM gcr.io/fuzzbench/base-image
 
 # support for llamuta 
-COPY mutators /mutators
+COPY llamuta /llamuta 
+
+RUN  apt-get update && apt-get install -y cmake
+
+RUN cd /llamuta && \
+    chmod a+rw -R /llamuta && \
+    mkdir -p build && \
+    rm -rf build/* && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc)
